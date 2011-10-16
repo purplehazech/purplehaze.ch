@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+ <meta name="description" content="purplehaze.ch: neu mit 2.0 beta und so">
+ <meta name="keywords" content="purplehaze,server,inf99f,linux,cool">
+ <!-- og data for facebook et al -->
+ <meta property="og:title" content="purplehaze.ch">
+ <meta property="og:type" content="website">
+ <meta property="og:url" content="http://purplehaze.ch">
+ <meta property="og:image" content="http://purplehaze.ch/logo.jpg">
+ <meta property="og:site_name" content="purplehaze.ch">
+ <meta property="fb:admins" content="543673831,100002168545989">
+ <meta property="fb:page_id" content="262214643802238">
+ <meta property="fb:app_id" content="192753464124721">
+ <title>purplehaze.ch</title>
+ <!--
+  purplehaze is bäck and it wants BRAAIIIINS!
+
+  This simple page is imostly static and uses some jquery magic for dynamically presenting a unix 
+  fortune file. The fortune file was converted using the follwing awk script:
+
+   BEGIN { printf("_purplehaze_fortune = [\n\t\"") }
+   !/^%$/ { printf("%s<br/>", $0) }
+   /^%$/ { printf "\",\n\t\"" }
+   END { printf("\n];") }
+
+  Since the output of the script is not perfect, some refactoring was needed. I also
+  shrouded the results in a base64 data islet hoping to spare them from being indexed
+  by search machines.
+
+  If everything is working as it should a new fortune cookie gets displayed every 3 
+  minutes.
+
+  The news section is loaded from all over the place and the php scripts below this site are
+  mainly there for security reasons so i dont expose and secret api keys or whatnot. They also
+  take care of caching in a sane manner, merge some of the data streams and perform touchups 
+  on some of the data.
+
+  The 8-bit thingy in the top of the projects section is a playable version of conways game of 
+  life. If you never read about that and you are reading this part of the page you should 
+  probably check it out. cellular automata are awesome things!
+
+  The script stuff here is released under the GNU Public Licence unless otherwise noted.
+
+  2010 & 2011 - All Rights reserved, Alle Rechte vorbehalten
+         hairmare#purplehaze.ch
+         lots of thanks to chrigu#purplehaze.ch for the fortune file.
+ -->
+
+ <!-- jquery on legacy path -->
+ <script src="jquery.min.js"></script>
+ <!-- 1140px Grid styles for IE --> 
+ <!--[if lte IE 9]><link rel="stylesheet" href="css/ie.css" type="text/css" media="screen" /><![endif]--> 
+ <!-- The 1140px Grid - http://cssgrid.net/ --> 
+ <link rel="stylesheet" href="css/1140.css" type="text/css" media="screen"> 
+ <!-- some nice fonts -->
+ <link href='http://fonts.googleapis.com/css?family=Tenor+Sans' rel='stylesheet' type='text/css'>
+ <link href='http://fonts.googleapis.com/css?family=Walter+Turncoat' rel='stylesheet' type='text/css'>
+ <!-- we would like latex style hyphenation of text -->
+ <script src="js/hyphenate.js" type="text/javascript"></script>
+ <!-- and smooth scrolling effects -->
+ <script src="js/jquery.scrollTo-min.js" type="text/javascript"></script>
+ <!-- even sorting the news will happen on the client -->
+ <script src="js/jquery.jsort.0.4.js" type="text/javascript"></script>
+ <!-- make times look nice -->
+ <script src="js/jquery.timeago.js" type="text/javascript"></script>
+ <!-- array of fortunes, shrouded in base64 -->
+ <script src="data:text/javascript;base64,ICB2YXIgX3B1cnBsZWhhemVfZm9ydHVuZSA9IFsKCSJIw6R0dGV0IGlociB1bnMgbmljaHQgc28gdmllbCBlcmtsw6RydCwgaMOkdHRlbiB3aXIgYXVjaCBtZWhyIHZlcnN0YW5kZW4hPGJyLz4iLAoJIk1hbiBrYW5uIGRpZXNlbiBUZXh0IG5hdMO8cmxpY2ggYXVjaCBtaXQgJ2htZG5ibWZkbicgw7xiZXJzZXR6ZW4sIGFiZXIgZGFzIHfDpHJlIG5hdMO8cmxpY2ggZmFsc2NoLi4uPGJyLz4iLAoJIldpZSBzb2xsdGVuIHdpciBsZXJuZW4sIHdhcyBpaHIgd2lzc3QsIG9obmUgenUgd2VyZGVuLCB3aWUgaWhyIHNlaWQ/ITxici8+IiwKCSJMaWViZXQgZXVyZSBGZWluZGUhIFZpZWxsZWljaHQgc2NoYWRldCBlcyBpaHJlbSBSdWYuPGJyLz4iLAoJIkFsbGUgTWVuc2NoZW4gd2VyZGVuIGFscyBPcmlnaW5hbCBnZWJvcmVuLCBkaWUgbWVpc3RlbiBzdGVyYmVuIGFscyBLb3BpZS48YnIvPiIsCgkiQWxsZXMgd2lyZCB0ZXVyZXIuIE51ciBkaWUgQXVzcmVkZW4gd2VyZGVuIGJpbGxpZ2VyLjxici8+IiwKCSJCZXZvciBtYW4gZGllIFdlbHQgdmVyw6RuZGVydCwgd8OkcmUgZXMgdmllbGxlaWNodCB3aWNodGlnZXIsIHNpZSBuaWNodCB6dWdydW5kZSB6dSByaWNodGVuLjxici8+IiwKCSJEYXMgRW5kZSBkZXIgS3VsdHVyIGhhdCBiZXJlaXRzIHN0YXR0Z2VmdW5kZW46IEFtIEJlZ2lubiBkZXIgWml2aWxpc2F0aW9uLjxici8+IiwKCSJEYXNzIGRlciBNZW5zY2ggZGFzIGVkZWxzdGUgR2VzY2jDtnBmIHNlaSBsw6Rzc3Qgc2ljaCBhdWNoIHNjaG9uIGRhcmF1cyBhYm5laG1lbiwgZGFzcyBlcyBpaG0gbm9jaCBrZWluIGFuZGVyZXMgR2VzY2jDtnBmIHdpZGVyc3Byb2NoZW4gaGF0Ljxici8+IiwKCSJEZXIgZXJzdGUgTWVuc2NoIHdhciBuaWNodCBkZXIgbGV0enRlIEFmZmUuPGJyLz4iLAoJIkRpZSBHdXRlbiBzdGVyYmVuIHp1ZXJzdC4gTWFuIG11c3Mgc2ljaCBzY2jDpG1lbiwgZGFzcyBtYW4gbm9jaCBsZWJ0Ljxici8+IiwKCSJEaWUgV2VsdCBnZWjDtnJ0IGRlbmVuLCBkaWUgenUgaWhyZXIgRXJvYmVydW5nIGF1c3ppZWhlbiwgYmV3YWZmbmV0IG1pdCBTaWNoZXJoZWl0IHVuZCBndXRlciBMYXVuZS48YnIvPiIsCgkiRXMgZ2lidCB6d2VpIFdvcnRlIGRpZSBkaXIgdmllbGUgVMO8cmUgb2ZmbmVuIHdlcmRlbjogRHLDvGNrZW4gdW5kIFppZWhlbjxici8+IiwKCSJGcsO8aGVyIGhhdHRlbiBkaWUgTWVuc2NoZW4gQW5nc3Qgdm9yIGRlciBadWt1bmZ0LCBoZXV0ZSBtdXNzIGRpZSBadWt1bmZ0IEFuZ3N0IHZvciBkZW4gTWVuc2NoZW4gaGFiZW4uPGJyLz4iLAoJIkbDvGhsZW4gc2llIHNpY2ggTW9udGFncyB3aWUgYXVzZ2Vrb3R6dCwgZsOkbmd0IGRpZSBXb2NoZSBhdXNnZWJyb2NoZW4gZ3V0IGFuLjxici8+IiwKCSJMZWJlIHNvIGFscyBzZWkgamVkZXIgVGFnIGRlaW4gbGV0enRlciAtIGVpbmVzIFRhZ2VzIHdpcnN0IER1IHJlY2h0IGhhYmVuLjxici8+IiwKCSJadWVyc3QgbGVybnQgbWFuIGdlaGVuIHVuZCBzcHJlY2hlbiwgZGFubiBzdGlsbHNpdHplbiB1bmQgTXVuZCBoYWx0ZW4uPGJyLz4iLAoJIlp3aWViZWxuIHN0YXR0IEtpd2lzIGthdWZlbiEgU2llIHNpbmQgbMOkbmdlciBoYWx0YmFyIHVuZCBhdXNzZXJkZW0gcHJlaXN3ZXJ0ZXIuPGJyLz4iLAoJIkFsbGUgVGFnZSBzaW5kIGdsZWljaCBsYW5nLCBudXIgdmVyc2NoaWVkZW4gYnJlaXQuPGJyLz4iLAoJIkF1Y2ggd2Vpc3NlciBXZWluIG1hY2h0IGVpbmUgcm90ZSBOYXNlLjxici8+IiwKCSJCZWkga2FsdGVtIFdldHRlciBsw6R1ZnQgZGllIE5hc2UsIGJlaSBrYWx0ZW0gQmllciBwYXNzaWVydCdzIGRlciBCbGFzZS48YnIvPiIsCgkiRGFzIEdlaGlybiBicmF1Y2h0IGtlaW4gQmx1dC4gRXMgbXVzcyBudXIgZmV1Y2h0Z2VoYWx0ZW4gd2VyZGVuLjxici8+IiwKCSJEYXMgTGViZW4gaGF0IGtlaW5lbiBHaW4gbWVocjogRGVyIEtsw7xnZXJlIGtpcHB0IG5hY2guPGJyLz4iLAoJIkdyb3NzZSBFcmVpZ25pc3NlIHdlcmZlbiBpaHJlIFNjaGF0dGVuIHVudGVyIGRpZSBBdWdlbi48YnIvPiIsCgkiS29udHJvbGxpZXJ0ZSBTdGltdWxhbnogZGVyIGtsZWluZW4gZ3JhdWVuIEdlaGlybnplbGxlbiBtaXR0ZWxzIGtsZWluZXIgRG9zZW4gYWxrb2hvbGlzY2hlciBHZXRyw6Rua2UuLi4gSGljay4uLjxici8+IiwKCSJNYW4ga2FubiBXYXNzZXIgdHJpbmtlbiwgbWFuIGthbm4gZXMgYWJlciBhdWNoIGxhc3Nlbi48YnIvPiIsCgkiTWl0IGRlbSBCaWVyZXMgSG9jaGdlbnVzcywgd8OkY2hzdCBkZXMgQmF1Y2hlcyBSYWRpdXMuPGJyLz4iLAoJIlJlYWxpdMOkdCBpc3QgZWluZSBJbGx1c2lvbiwgZGllIGR1cmNoIE1hbmdlbCBhbiBBbGtvaG9sIGVudHN0ZWh0Ljxici8+IiwKCSJXZWluIGlzdCBpbiBGbGFzY2hlbiBnZWbDvGxsdGUgUG9lc2llITxici8+IiwKCSJJY2ggbmVobWUga2VpbmUgRHJvZ2VuLiBOdXIgZ2VsZWdlbnRsaWNoIGV0d2FzIEVmZmVrdGhhc2NoLjxici8+CQktLSBILlIuIEt1bnplPGJyLz4iLAoJIkFudGlxdWl0w6R0ZW4gc2luZCBkZXIgS2l0c2NoIHZvbiBnZXN0ZXJuIHp1bSBQcmVpcyB2b24gbW9yZ2VuLjxici8+IiwKCSJXYXIgZGFzIG5lIHNjaGVpc3MgUGFydHkuIEjDpHR0ZSBpY2ggbWVpbmUgSG9zZSBlaGVyIHdpZWRlcmdlZnVuZGVuLCB3w6RyZSBpY2ggc2Nob24gdmllbCBmcsO8aGVyIG5hY2ggSGF1c2UgZ2VnYW5nZW4uPGJyLz4iLAoJIkRhcyBzY2jDtm5zdGUgYW0gU3BvcnQgaXN0IGRlciBhbnNjaGxpZXNzZW5kZSBEdXJzdC48YnIvPiIsCgkiVHJlaWInIFNwb3J0LCBvZGVyIER1IGJsZWlic3QgZ2VzdW5kLjxici8+IiwKCSJBbGxlIEjDvGhuZXIgZGllc2VyIEVyZGUgbGVnZW4gcHJvIEphaHIgZXR3YSA0MDAuMDAwLjAwMC4wMDAgRWllci48YnIvPiIsCgkiMTExLDExMSwxMTEgeCAxMTEsMTExLDExMSA9IDEyLDM0NSw2NzgsOTg3LDY1NCwzMjE8YnIvPiIsCgkiRGVyIMOkbHRlc3RlIEdvbGRmaXNjaCB3dXJkZSA0MSBKYWhyZSBhbHQuIFNlaW4gTmFtZSB3YXIgRnJlZGR5Ljxici8+IiwKCSJEZXIgQXp0ZWtlbi1IZXJyc2NoZXIgTW9udGV6dW1hIGhhdHRlIGVpbmVuIE5lZmZlbiwgQ3VpdGxhaGFjLCBkZXNzZW4gTmFtZSBzb3ZpZWwgd2llICdFaW4gZ3Jvc3NlciBIYXVmZW4gU2NoZWlzc2UnIGJlZGV1dGV0ZS48YnIvPiIsCgkiRmluZ2VybsOkZ2VsIHdhY2hzZW4gbWl0IDAsMDAwMDAwMDQ3IFpvbGwgcHJvIFNla3VuZGUuPGJyLz4iLAoJIkRhcyBtYXhpbWFsZSBWb2x1bWVuIHN1YnRlcnJhcmVyIEFncmFycHJvZHVrdGl2aXTDpHQgc3RlaHQgaW4gcmV6aXByb2tlciBSZWxhdGlvbiB6dXIgaW50ZWxsZWt0dWVsbGVuIEthcGF6aXTDpHQgaWhyZXIgUHJvZHV6ZW50ZW4uPGJyLz4iLAoJIlBvcHVsYW50ZW4gdm9uIERvbWl6aWxlbiBtaXQgdHJhbnNwYXJlbnQgZnJhZ2lsZXIgQXVzc2Vuc3RydWt0dXIgc29sbHRlbiBzaWNoIHZvbiBkZXIgVW1mdW5rdGlvbmllcnVuZyBkaXZlcnNlciBnZWdlbiBWZXJmb3JtdW5nIHJlc2lzdGVudGVyIEdlZ2Vuc3TDpG5kZSBpbiBXdXJmcHJvamVrdGlsZSBkaXN0YW56aWVyZW4uPGJyLz4iLAoJIkFyc2Noa3JpZWNoZXIgaGFiZW4gZXMgbWVpc3Qgd2FybSB1bSBkZW4gS29wZiwgZGVuIGFuZGVyZW4gYmzDpHN0IGRlciBXaW5kIHZvbGwgaW5zIEdlc2ljaHQuPGJyLz4iLAoJIkljaCBiaW4gZGFmw7xyLiBKYSBzb2dhciBkYWdlZ2VuLjxici8+CQktLSBMZWNoIFdhbGVzYTxici8+IiwKCSJNZWluIEdld2lzc2VuIGlzdCByZWluLi4uIGljaCBoYWIgZXMgbmllIGJlbnV0enQuPGJyLz4iLAoJIldlciBzaWNoIGFuIGRhcyBBYnN1cmRlIGdld8O2aG50IGhhdCwgZmluZGV0IHNpY2ggaW4gdW5zZXJlciBaZWl0IGd1dCB6dXJlY2h0Ljxici8+CQktLSBFdWdlbmUgSW9uZXNjbzxici8+IiwKCSJNaWNyb3NvZnQgU29sdXRpb24gUHJvdmlkZXI8YnIvPiIsCgkiR2V3YWx0aWcgZ2VnZW4gR2V3YWx0IGVyemV1Z3QgZ2V3YWx0aWcgR2VnZW5nZXdhbHQuPGJyLz4JCS0tIEhhdWtlIEh1bGxlbjxici8+IiwKCSJXbyBGcmllZGVuc3RhdWJlbiBmbGllZ2VuLCB3ZXJkZW4gRGVua23DpGxlciBiZXNjaGlzc2VuLjxici8+IiwKCSJXZXIgc2ljaCBkZW4gR2VzZXR6ZW4gbmljaHQgZsO8Z2VuIHdpbGwsIG11c3MgZGllIEdlZ2VuZCB2ZXJsYXNzZW4sIHdvIHNpZSBnZWx0ZW4uPGJyLz4JCS0tIEdvZXRoZTxici8+IiwKCSJDaGlydXJnZW4gc2luZCBBdWZzY2huZWlkZXIuLi48YnIvPiIsCgkiRGFzIENoYW9zIHNlaSB3aWxsa29tbWVuIC0gZGllIE9yZG51bmcgaGF0IHZlcnNhZ3QuPGJyLz4iLAoJIk1pdCBkZW0gS29wZiBnZWdlbiBkaWUgV2FuZCBzY2hsYWdlbiB2ZXJicmF1Y2h0IHBybyBTdHVuZGUgMTUwIEthbG9yaWVuLjxici8+IiwKCSJVbnNlciBQcm9ncmFtbWllcmVyIGxpZWJ0ZSBDb21wdXRlciAtIGJpcyBtYW4gaWhuIGRhYmVpIGVyd2lzY2h0ZS48YnIvPiIsCgkiRG9uJ3QgTGV0IFRoZSBCYXN0YXJkcyBHcmluZCBZb3UgRG93bjxici8+CQktLSBUaGUgVG9hc3RlcnM8YnIvPiIsCgkieW91IGNhbiBkYW5jZSBhbmQgc2luZywgeW91IGNhbiB0YWxrIGFuZCBkcmluazxici8+eW91IGNhbiBwYXJ0eSBhbGwgbmlnaHQgbG9uZzxici8+V2hlbiB5b3UncmUgd2l0aCB0aGUgU2thIHBhdHJvbCA8YnIvPgkJLS0gVGhlIFNrYWxhdG9uZXM8YnIvPiIsCgkiU3R1bWJsaW5nIGhvbWUgaW4gdGhlIGVhcmx5IGhvdXJzIG9mIHRoZSBtb3JuaW5nIHN1bjxici8+YWZ0ZXIgYW5vdGhlciBsYXRlIG5pZ2h0IGJ1dCBJIGd1ZXNzIEkgaGFkIGZ1bjxici8+ICAgICAgICAgICAgICAgIC0tIFRoZSBTa2FsYXRvbmVzPGJyLz4iLAoJIkxldCBtZSB0ZWxsIHlvdSwgaHVnZ2luIHVwIHRoZSBiaWcgbW9ua2V5IG1hbjxici8+ICAgICAgICAgICAgICAgIC0tIFRoZSBTcGVjaWFsczxici8+IiwKCSJJIHNhaWQ6IEhleSwgYmFydGVuZGVyPGJyLz5Ob3Qgb25lLCBub3QgdHdvLCBub3QgdGhyZWUsIGZvdXIgYm90dGxlIG9mIGJlZXI8YnIvPgkJLS0gTGF1cmVsIEFpdGtlbjxici8+IiwKCSJXaGF0IGEgbG92ZWx5IGRheSBmb3IgYSBoYW5naW5nPGJyLz4iLAoJIkRpZSBGYWt0ZW4sIG9id29obCBpbnRlcmVzc2FudCwgc2luZCBpcnJlbGV2YW50Ljxici8+IiwKCSJEZXIgVW50ZXJzY2hpZWQgendpc2NoZW4gR2VuaWFsaXTDpHQgdW5kIER1bW1oZWl0IGlzdCBkYXMgR2VuaWFsaXTDpHQgaWhyZSBHcmVuemVuIGhhdC48YnIvPiIsCgkiS8O8bnN0bGljaGUgSW50ZWxsaWdlbnogaGF0IGtlaW5lIENoYW5jZSBnZWdlbiBuYXTDvHJsaWNoZSBEdW1taGVpdC48YnIvPiIsCgkiV2llIHNjaHJlaWJ0IG1hbiBlaW5lIE51bGwgbWl0IFLDtm1pc2NoZW4gWmFobGVuPzxici8+IiwKCSJTaWUgaGFiZW4gZGFzIFJlY2h0LCBkaWUgQXVzc2FnZSB6dSB2ZXJ3ZWlnZXJuLiBBbGxlcywgd2FzIHNpZSB2b24gamV0enQgYW4gc2FnZW4sIGthbm4gdW5kIHdpcmQgZmFsc2NoIHppdGllcnQgdW5kIGRhbm4gZ2VnZW4gU2llIHZlcndlbmRldCB3ZXJkZW4uPGJyLz4iLAoJIkJlcmtlbGV5IGlzdCBzb3dvaGwgZnVlciBCU0Qgd2llIGF1Y2ggZsO8ciBMU0QgYmVyw7xobXQuIEljaCBnbGF1YmUsIGRhcyBpc3Qga2VpbiBadWZhbGwuPGJyLz4iLAoJIkplZGVyIGhhdCBkYXMgUmVjaHQsIER1bW1oZWl0ZW4genUgYmVnZWhlbi4gRWluaWdlIHRyZWliZW4gamVkb2NoIGdyb2JlbiBNaXNzYnJhdWNoIG1pdCBkaWVzZW0gUmVjaHQuPGJyLz4iLAoJIlNpciwgcHV0IHRoZSBjcmFjayBwaXBlIGRvd24gYW5kIHN0ZXAgYXdheSBmcm9tIHRoZSBjb21wdXRlciE8YnIvPiIsCgkiV2FybmluZzogeW91IGFyZSBsb2dnZWQgaW50byByZWFsaXR5IGFzIHJvb3QuLi48YnIvPiIsCgkiSXQgdG9vayB0aGUgY29tcHV0aW5nIHBvd2VyIG9mIHRocmVlIEMtNjRzIHRvIGZseSB0byB0aGUgbW9vbi4gSXQgdGFrZXMgYSA0ODYgdG8gcnVuIFdpbmRvd3MgOTUuIFNvbWV0aGluZyBpcyB3cm9uZyBoZXJlLjxici8+IiwKCSJBbHdheXMgbGlzdGVuIHRvIGV4cGVydHMuICBUaGV5J2xsIHRlbGwgeW91IHdoYXQgY2FuJ3QgYmUgZG9uZSwgYW5kIHdoeS4gVGhlbiBkbyBpdC4gLSBSb2JlcnQgQS4gSGVpbmxlaW48YnIvPiIsCgkia2xpY2sgb24gZXZlcnl0aGluZyE8YnIvPiIsCgkiQmFobsO8YmVyZ8OkbmdlIHNpbmQgZGllIGjDpHJ0ZXN0ZW4gRHJvZ2VuIGRlciBXZWx0IC0gRWluIFp1ZyB1bmQgZHUgYmlzdCB3ZWchPGJyLz4iLAoJIkvDvGhlIGdlYmVuIGtlaW5lIE1pbGNoLCBkaWUgQmF1ZXJuIG5laG1lbiBzaWUgaWhuZW4gd2VnITxici8+IiwKCSJJJ20gZ29pbmcgcGlzc2VkIHRvIGNodXJjaCBhbmQgc2luZyB0aGUgUnVzc2lhbiBuYXRpb25hbCBoeW1uPGJyLz5TVEFZIFJVREUsIHRoYXQncyBteSBhZHZpY2U8YnIvPiIsCgkiVGFrZSBhIGNoYW5jZSBzdGFnZWRpdmluZyBhdCB0aGUgS2VsbHkgRmFtaWx5PGJyLz4JCS0tIFRoZSBCdXN0ZXJzPGJyLz4iLAoJIk5vIHJpc2ssIG5vIGZ1bjxici8+IiwKCSJza2FuayBkb3duITxici8+IiwKCSJMYXNzdCBldWNoIG5pY2h0IHVtcyBsZWJlbiBicmluZ2VuITxici8+IiwKCSJEaWUgUmVhbGl0w6R0IGhhdCBkaWUgV2lya2xpY2hrZWl0IGzDpG5nc3Qgw7xiZXJob2x0PGJyLz4iLAoJIk1vemFydCB0aG91Z2h0IGhlIHdhcyByZWFsbHkgc21hcnQgYnV0IGhlIGNvdWxkbid0IHBsYXkgc2thPGJyLz4gICAgICAgIC0tIE1hcmsgRm9nZ288YnIvPiIsCgkiRXMgaXN0IGJlc3NlciwgR2Vub3NzZW5lcyB6dSBiZXJldWVuLDxici8+YWxzIHp1IGJlcmV1ZW4sPGJyLz5kYXNzIG1hbiBuaWNoc3QgZ2Vub3NzZW4gaGF0Ljxici8+IiwKCSJBbGtvaG9sIGlzdCBrZWluZSBBbnR3b3J0LDxici8+YWJlciBtYW4gdmVyZ2lzc3QgYmVpbSBUcmlua2VuIGRpZSBGcmFnZS48YnIvPiIsCgkiSGFsdGV0IGRpZSBXZWx0IGFuLDxici8+aWNoIHdpbGwgYXVzc3RlaWdlbi48YnIvPiIsCgkiU28gbGFuZ2UgaWhyIHR1dCBhbHMgd8O8cmRldCBpaHIgbWljaCBiZXphaGxlbiw8YnIvPnR1ZSBpY2ggc28gYWxzIHfDvHJkZSBpY2ggYXJiZWl0ZW4uPGJyLz4iLAoJIldhcyBEdSBoZXV0ZSBuaWNodCBlcmxlZGlnc3QsPGJyLz5tdXNzdCBEdSBtb3JnZW4gbmljaHQga29ycmlnaWVyZW4uPGJyLz4iLAoJIk1pdCBDb21wdXRlcm4gaGF0IG1hbiBaZWl0LCBEaW5nZSB6dSB0dW4sPGJyLz5kaWUgbWFuIG9obmUgc2llIG5pY2h0IHR1biBtw7xzc3RlLi4uPGJyLz4iLAoJIlVuZCBhdXMgZGVtIENoYW9zIHNwcmFjaCBlaW5lIFN0aW1tZSB6dSBtaXIsPGJyLz5sw6RjaGxlIHVuZCBzZWkgZnJvaCwgZXMga8O2bm50ZSBzY2hsaW1tZXIga29tbWVuLjxici8+VW5kIGljaCBsw6RjaGVsdGUgdW5kIGljaCB3YXIgZnJvaDxici8+dW5kIGVzIGthbSBzY2hsaW1tZXIuPGJyLz4iLAoJIldlbGNvbWUgdG8gdGhlIGRlcGFydG1lbnQgb2YgcmVkdW5kYW5jeSBkZXBhcnRtZW50ITxici8+IiwKCSJMaWViZXIgw7xiZXIgTmFjaHQgdmVyc3VtcGZlbiw8YnIvPmFscyBpbSBTdW1wZiDDvGJlcm5hY2h0ZW48YnIvPiIsCgkiQW0gOC4gVGFnIHNjaHVmIEdvdHQgZGFzIEJpZXIsPGJyLz51bmQgc2VpdGRlbSBow7ZydGUgbWFuIG5pY2h0cyBtZWhyIHZvbiBpaG0uIDxici8+IiwKCSJNYW4gc29sbHRlIHNpY2ggR2VsZCBudXIgdm9uIGVpbmVtIFBlc3NpbWlzdGVuIGxlaWhlbjxici8+ZXIgZXJ3YXJ0ZXQgZXMgbmljaHQgenVyw7xjay48YnIvPiIsCgkiV2VubiBEdSBlcyBpZG90ZW5zaWNoZXIgbWFjaHN0LDxici8+ZmluZGV0IHNpY2ggc2ljaGVyIGVpbiBiZXNzZXJlciBJZGlvdC48YnIvPiIsCgkiV2VyIHNww6R0IHp1IEJldHQgZ2luZyB1bmQgZnLDvGggaGVyYXVzIG11c3MsPGJyLz53ZWlzcyB3b2hlciBkYXMgV29ydCBNb3JnZW5ncmF1ZW4ga29tbXQuPGJyLz4iLAoJIkplZGVyIE1lbnNjaDxici8+YmVyZWl0ZXQgdW5zIGF1ZiBpcmdlbmRlaW5lIEFydCBWZXJnbsO8Z2VuLjxici8+RGVyIGVpbmUsIHdlbm4gZXIgZWluIFppbW1lciBiZXRyaXR0LDxici8+ZGVyIGFuZGVyZSwgd2VubiBlciBlcyB2ZXJsw6Rzc3QuPGJyLz4iLAoJIldlbm4gamVtYW5kIGV0d2FzIGdldHJ1bmtlbiBoYXQsIG1lcmt0IGRhcyBqZWRlcjxici8+d2VubiBlaW5lciBEdXJzdCBoYXQsIG1lcmt0IGRhcyBrZWluZXIuPGJyLz4iLAoJIkbDvHIgZGVuIE9wdGltaXN0ZW4gaXN0IGRhcyBHbGFzIGhhbGIgdm9sbCw8YnIvPmbDvHIgZGVuIFBlc3NpbWlzdGVuIGhhbGIgbGVlci48YnIvPkRlciBSZWFsaXN0IHZlcmRyw7xja3Qgc2ljaCBiZWl6ZWl0ZW4sPGJyLz5kYW1pdCBlciBuaWNodCBhYndhc2NoZW4gbXVzcy48YnIvPiIsCgkiQXJiZWl0c3d1dDogRWluZSBzY2h3ZXIgZXJrbMOkcmJhcmUgcHN5Y2hpc2NoZSBTdMO2cnVuZyw8YnIvPmRpZSBtaXQgZWluZXIgVGFzc2UgS2FmZmVlIHVuZCBlaW5lciBnZW3DvHRsaWNoZW48YnIvPlBsYXVkZXJlaSDDvGJlcnd1bmRlbiB3ZXJkZW4ga2Fubi48YnIvPiIsCgkiTmllbWFuZCB2ZXJtYWcgenUgc2FnZW4sPGJyLz53aWV2aWVsZSBwb2xpdGlzY2hlIER1bW1oZWl0ZW48YnIvPmR1cmNoIE1hbmdlbCBhbiBHZWxkPGJyLz5zY2hvbiB2ZXJoaW5kZXJ0IHdvcmRlbiBzaW5kLjxici8+IgogIF07Cgo="></script>
+ <script>
+  /**
+   * configure how old the oldest news entry may be
+   */
+  var news_cutoff_ts = new Date().getTime() - 2629743830; // 1   month
+      news_cutoff_ts = new Date().getTime() - 3944615750; // 1.5 months
+      news_cutoff_ts = new Date().getTime() - 5259487660; // 2   months
+
+  var load_news = function() {
+  	$.ajax({
+		url: 'fb.php',
+		dataType: 'json',
+		success: function(data) {
+			paging = data.paging;
+			data = data.data;
+			$.each(data, function(key, val) {
+				val.source = 'facebook';
+				val.url = 'http://facebook.com/permalink.php?story_fbid='+val.id+'&id='+val.from.id;
+				val.uts = val.updated_time * 1000;
+				val.datetime = convert_ts_todate(val.uts);
+				if (typeof val.comments != 'undefined') {
+					$.each(val.comments.data, function(ekey, eval) {
+						if (typeof eval.from.user_graph.username != 'undefined') {
+							uid = eval.from.user_graph.username;
+						} else {
+							uid = eval.from.id;
+						}
+						msg  = '<a href="http://facebook.com/'+uid+'"><img src="http://graph.facebook.com/'+uid+'/picture" style="float:left;margin-right:10px;"></a>';
+						msg += '<b><a href="http://facebook.com/'+uid+'">'+eval.from.name+'</a></b> '+eval.message;
+						msg += '<br>'+convert_ts_todate(eval.created_time * 1000);
+						msg += '<div style="clear:both"></div>';
+						val.comments.data[ekey].message = msg;
+					});
+				}
+				add_news_entry(val);
+			});
+			sort_news();
+		}
+	});
+	$.ajax({
+		url: 'lastfm.php',
+		dataType: 'json',
+		success: function(data) {
+			$.each(data, function(key, val) {
+				val.source = 'lastfm';
+				val.uts = val.date.uts * 1000;
+				val.datetime = convert_ts_todate(val.uts);
+				if (typeof val.image != 'undefined') {
+					val.message = '<img src="'+$(val.image[2]).attr('#text')+'" style="float:left">';
+				} else {
+					val.message = '';
+				}
+				val.message += '<b><a href="http://last.fm/user/'+val.user+'">'+val.user+'</a></b> loved ';
+				val.message += '"<a href="'+val.url+'">'+val.name+'</a>"';
+				val.message += ' by <a href="'+val.artist.url+'">'+val.artist.name+'</a> ';
+				val.message += '<div style="clear:both;"></div>';
+				add_news_entry(val);
+			});
+			sort_news();
+		}
+	});
+	$.ajax({
+		url: 'twitter.php',
+		dataType: 'json',
+		success: function(data) {
+			$.each(data, function(key, val) {
+				if (val.in_reply_to_status_id_str != null) {
+					data.splice(key, 1);
+					return;
+				}
+				retweet = false;
+				if (typeof val.retweeted_status != 'undefined') {
+					retweet = true;
+					original = val;
+					val = val.retweeted_status;
+				}
+				val.source = 'twitter';
+				val.message  = '<a href="http://twitter.com/'+val.user.screen_name+'"><img src="'+val.user.profile_image_url+'" style="float:left"></a>';
+				val.url = 'http://twitter.com/'+val.user.screen_name+'/status/'+val.id_str;
+				my_text = val.text;
+				$.each(val.entities.urls, function(ekey, eval) {
+					if (eval.expanded_url != null) {
+						my_text = my_text.replace(eval.url, '<a href="'+eval.expanded_url+'">'+eval.display_url+'</a>');
+					} else {
+						my_text = my_text.replace(eval.url, '<a href="'+eval.url+'">'+eval.url+'</a>');
+					}
+				});
+				$.each(val.entities.user_mentions, function(ekey, eval) {
+					my_text = my_text.replace('@'+eval.screen_name, '<a href="http://twitter.com/'+eval.screen_name+'">@'+eval.screen_name+'</a>');
+				});
+				$.each(val.entities.hashtags, function(ekey, eval) {
+					my_text = my_text.replace('#'+eval.text, '<a href="http://twitter.com/search/%23'+eval.text+'">#'+eval.text+'</a>');
+				});
+				my_media = '';
+				if (typeof val.entities.media != 'undefined') {
+					$.each(val.entities.media, function(ekey, eval) {
+						if (eval.expanded_url != null) {
+							my_text = my_text.replace(eval.url, '<a href="'+eval.expanded_url+'">'+eval.display_url+'</a>');
+						} else {
+							my_text = my_text.replace(eval.url, '<a href="'+eval.url+'">'+eval.url+'</a>');
+						}
+						my_media += '<img class="media" src="'+eval.media_url+'">';
+					});
+				}
+				val.message += my_text + my_media;
+				if (retweet) {
+					val.message += ' (via <a href="http://twitter.com/'+original.user.screen_name+'">@'+original.user.screen_name+'</a>)';
+				}
+				val.message += '<div style="clear:both;"></div>';
+				val.uts = Date.parse(val.created_at);
+				val.datetime = convert_ts_todate(val.uts);
+				add_news_entry(val);
+			});
+			sort_news();
+		}
+	});
+  	$.ajax({
+		url: 'youtube.php',
+		dataType: 'json',
+		success: function(data) {
+			$.each(data.data.items, function(key, val) {
+				val.source = 'youtube';
+				val.url = 'http://youtube.com/watch?v='+val.id;
+				val.message  = val.title+'<br><br>';
+				// new style embeds are broken on iphone if you dont login, i expect this to be fixed soon so im not working around it
+				val.message += '<iframe width="350" height="216" src="http://www.youtube.com/embed/'+val.id+'" frameborder="0" allowfullscreen class="yt resize"></iframe><br><br>';
+				val.message += val.description;
+				console.log(val.uploaded);
+				// hack that should make this work in most browsers
+				arr = val.uploaded.split(/[- :TZ]/);
+				date = new Date(arr[0], arr[1]-1, arr[2], arr[3], arr[4], arr[5]);
+				val.uts = date.getTime();
+				console.log(val.uts);
+				val.datetime = convert_ts_todate(val.uts);
+				add_news_entry(val);
+			});
+			sort_news();
+		}
+	});
+  }
+
+  var sort_news = function() {
+  	$('.news').jSort({
+		sort_by: 'div.row',
+		sort_by_attr: true,
+		attr_name: 'date',
+		item: 'div.row',
+		order: 'desc',
+		is_num: true
+	});
+  }
+
+  var add_news_entry = function(value) {
+  	if (value.uts < news_cutoff_ts) {
+		return;
+	}
+	rowid = 'newsid_'+value.uts;
+  	row = $('<div class="row '+value.source+'" date="'+value.uts+'" id="'+rowid+'"></div>');
+  	row.append($('<div class="threecol"><a href="'+value.url+'">'+value.datetime+'</a></div>'));
+	msg = $('<div>'+value.message+'</div>');
+	if (typeof value.comments != 'undefined') {
+		$.each(value.comments.data, function(key, val) {
+			msg.append($('<div class="comment">'+val.message+'</div>'));
+		});
+	}
+	// this somehow does not work in a sane fashion with my design, cutting the crap (i'll do it via app if i ever want it muahahahaha)
+	// msg.append('<br><fb:like href="'+value.url+'" send="true" width="360" show_faces="true" font="" colorscheme="dark"></fb:like>');
+	// btw. that was an evil, all your codes are belong to us laughter (kinda)
+	fivecol = $('<div class="fivecol last"></div>');
+	fivecol.append(msg);
+  	row.append(fivecol);
+
+	$('.news').append(row);
+	resize_embeds();
+	//FB.XFBML.parse(document.getElementById(rowid));
+  }
+
+  /** optimized for youtube videos for now, will fix twitter media when needed */
+  var resize_embeds = function() {
+  	$('.resize').each(function() {
+		nw = $(this).parent().width() - 10;
+		oh = $(this).height();
+		ow = $(this).width();
+
+		nh = nw/ow * oh;
+		$(this).width(nw).height(nh);
+	});
+  }
+
+  var convert_ts_todate = function(ts) {
+	return jQuery.timeago(new Date(ts));
+  }
+
+  var position = 0;
+  var scroll_to_next = function() {
+	
+	$.scrollTo($('.row')[position++]);
+  }
+
+  /**
+   * replace current fortune with random fortune
+   */
+  var update_fortune = function() {
+	fortuneindex=Math.floor(Math.random()*(_purplehaze_fortune.length+1))
+	$('.fortune').empty().append(_purplehaze_fortune[fortuneindex]);
+  }
+
+  window.fbAsyncInit = function() {
+	//FB.init({appId: '192753464124721', status: true, cookie: true, xfbml: true});
+	//FB.XFBML.parse(document.getElementsByClassName('news'));
+  };
+
+
+  $(document).ready(function() {
+	update_fortune();
+	setInterval('update_fortune()', 180000); // = 3 min
+	$.scrollTo.defaults.duration = 1000;
+	$(window).resize(function() {
+		resize_embeds();
+	});
+	load_news();
+  });
+ </script>
+
+ <style type="text/css">
+  html {
+	background-color: rgba(128,0,128,0.1);
+	font-family: 'Tenor Sans', sans-serif;
+	text-align: center;
+	color: white;
+	font-size: 80%;
+  }
+  h1 { display: none; }
+  h2 { display: none; }
+  h3 { display: none; }
+  h4 { font-family: 'Walter Turncoat', cursive; }
+  h5 { font-family: 'Walter Turncoat', cursive; }
+
+  .logofun .row .threecol {
+	-moz-border-radius: 20px;
+	-webkit-border-radius: 20px;
+	padding:20px;
+	margin-left: 20px;
+	margin-right: 20px;
+	border-radius: 20px;
+	background-color: white;
+  }
+  .socialabout .row .fivecol {
+	padding-top: 50px;
+  }
+  .logofun {
+	position: relative;
+	padding-top: 50px;
+	padding-bottom: 50px;
+	background-color: rgba(128,0,128,1);
+  }
+  .fortune {
+	border: 20px solid #b030b0;
+	-moz-border-radius: 20px;
+	-webkit-border-radius: 20px;
+	border-radius: 20px;
+	background-color: #b030b0;
+  }
+
+  .navigation {
+  	padding-top: 5px;
+	padding-bottom: 5px;
+	background: black;
+	font-family: 'Walter Turncoat', cursive;
+  }
+  .navigation .row div a {
+  	padding-left: 5px;
+	padding-right: 5px;
+  }
+  .navigation .row div a:link {
+  	color:white;
+	text-decoration: none
+  }
+  .navigation .row div a:visited {
+  	color:white;
+	text-decoration: none
+  }
+  .navigation .row div a:active {
+  	color:white;
+	text-decoration: none
+  }
+  .navigation .row div a:hover {
+  	color:white;
+	text-decoration: none
+  }
+  .navigation .row div a:link {
+  	color:white;
+	text-decoration: none
+  }
+
+  .news {
+  	padding-top: 50px;
+	background-color: white;
+  }
+  .news .row {
+	padding-bottom: 50px;
+  }
+  .news .row .threecol {
+  	color: black;
+	font-weight: bold;
+	font-family: 'Walter Turncoat', cursive;
+  	border: 20px solid rgba(0,0,0,0);
+  	-moz-border-radius: 20px;
+	-webkit-border-radius: 20px;
+	border-radius: 20px;
+	margin-left: 20px;
+	margin-right: 20px;
+  }
+  .news .facebook {
+  	background-image: url(/img/FaceBook_64x64.png);
+	background-repeat: no-repeat;
+	background-position: 20px top;
+  }
+  .news .lastfm {
+  	background-image: url(/img/lastfm.png);
+	background-repeat: no-repeat;
+	background-position: 20px top;
+  }
+  .news .lastfm .fivecol div img {
+  	background-color:black;
+	padding: 5px;
+  	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	border-radius: 10px;
+	margin-right: 5px;
+  }
+  .news .twitter {
+  	background-image: url(/img/twitter.png);
+	background-repeat: no-repeat;
+	background-position: 20px top;
+  }
+  .news .twitter .fivecol div img {
+	margin-right: 10px;
+  }
+  .news .twitter .fivecol div img.media {
+  	background-color:black;
+	padding: 5px;
+  	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	border-radius: 10px;
+	margin-top: 20px;
+  }
+  .news .youtube {
+  	background-image: url(/img/youtube.png);
+	background-repeat: no-repeat;
+	background-position: 20px top;
+  }
+  .news .youtube .fivecol div iframe.yt {
+  	background-color:black;
+	padding: 5px;
+  	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	border-radius: 10px;
+	margin-right: 5px;
+  }
+  .news .row .threecol a:link {
+  	color: black;
+  	text-decoration: none;
+  }
+  .news .row .threecol a:visited {
+  	color: black;
+  	text-decoration: none;
+  }
+  .news .row .threecol a:active {
+  	color: black;
+  	text-decoration: none;
+  }
+  .news .row .threecol a:hover {
+  	text-decoration: underline;
+  }
+  .news .row .fivecol div {
+  	background-color: purple;
+	border: 20px solid purple;
+  	-moz-border-radius: 20px;
+	-webkit-border-radius: 20px;
+	border-radius: 20px;
+	color: white;
+	text-align: justify;
+  }
+  .news .row .fivecol a:link {
+  	color: white;
+	text-decoration: none;
+  }
+  .news .row .fivecol a:visited {
+   	color: white;
+	text-decoration: none;
+  }
+  .news .row .fivecol a:active {
+   	color: white;
+	text-decoration: none;
+  }
+  .news .row .fivecol a:hover {
+	text-decoration: underline;
+  }
+
+
+  .about {
+  	padding-top: 50px;
+	padding-bottom: 60px;
+	background-color: rgba(176,48,176,1);
+  }
+  .about .row .threecol {
+  	background-color: black;
+	border: 20px solid black;
+  	-moz-border-radius: 20px;
+	-webkit-border-radius: 20px;
+	border-radius: 20px;
+	margin-left: 20px;
+	margin-right: 20px;
+  }
+  .about .row .fivecol div {
+	background-color: white;
+	border: 20px solid white;
+  	-moz-border-radius: 20px;
+	-webkit-border-radius: 20px;
+	border-radius: 20px;
+	color: black;
+	text-align: justify;
+	padding-bottom: 10px;
+  }
+  .about .row .fivecol div p {
+	padding-bottom: 10px;
+  }
+  .about .row .fivecol div .stars {
+	font-size: 250%;
+	text-align: center;
+	color: rgba(176,48,176,1);
+  }
+  .about .row .fivecol div h3 {
+	padding-bottom: 5px;
+  }
+  .about .row .fivecol div h4 {
+	padding-bottom: 10px;
+  }
+
+  .projects {
+	padding-top: 50px;
+	padding-bottom: 50px;
+	background-color: rgba(128,0,128,0.1);
+	color: black;
+  }
+  .projects .row .threecol {
+	padding: 20px; 
+	background: white;
+	margin-left: 20px; 
+	margin-right: 20px;
+    	-moz-border-radius: 20px;
+	-webkit-border-radius: 20px;
+	border-radius: 20px;
+  }
+  .rabeproject {
+	padding-top: 50px;
+	padding-bottom: 50px;
+	background: white;
+  }
+  .rabeproject .row .threecol {
+  	padding: 20px; 
+	padding-top: 0;
+	margin-left: 20px; 
+	margin-right: 20px;
+	-moz-border-radius: 20px;
+	-webkit-border-radius: 20px;
+	border-radius: 20px;
+  }
+  .rabeproject .row .fivecol div {
+	background: purple;
+	padding: 20px;
+	text-align: justify;
+	-moz-border-radius: 20px;
+	-webkit-border-radius: 20px;
+	border-radius: 20px;
+  }
+
+  .songtickerproject {
+	padding-top: 50px;
+	padding-bottom: 50px;
+	background-color: purple;
+	color: black;
+  }
+  .songtickerproject .row .threecol {
+  	padding: 20px; 
+	margin-left: 20px; 
+	margin-right: 20px;
+	-moz-border-radius: 20px;
+	-webkit-border-radius: 20px;
+	border-radius: 20px;
+	font-weight: bold;
+	font-size: 120%;
+	color:white;
+  }
+  .songtickerproject .row .threecol a:link {
+	color:white;
+	text-decoration: none;
+  }
+  .songtickerproject .row .threecol a:visited {
+	color:white;
+	text-decoration: none;
+  }
+  .songtickerproject .row .threecol a:active {
+	color:white;
+	text-decoration: none;
+  }
+  .songtickerproject .row .threecol a:hover {
+	color:white;
+  }
+  .songtickerproject .row .fivecol div {
+	background: white;
+	padding: 20px;
+	text-align: justify;
+	-moz-border-radius: 20px;
+	-webkit-border-radius: 20px;
+	border-radius: 20px;
+  }
+
+  .socialabout {
+	margin-top: 50px;
+	margin-bottom: 600px;
+  }
+  .socialabout .row .social {
+	background-color: rgba(128,0,128,1);
+	-moz-border-radius: 20px;
+	-webkit-border-radius: 20px;
+	border-radius: 20px;
+	padding-left:20px;
+	padding-right:20px;
+	margin-left: 20px;
+	margin-right: 20px;
+	border-radius: 20px;
+  }
+
+  /* realign icons from different networks */
+  .social .twitter-share-button {
+	position: relative;
+	top: -29px;
+  }
+  .social #___plusone_0 {
+	position: relative;
+        top: -29px;
+  }
+
+  .blurb {
+	padding-top: 50px;
+	color: black;
+	font-family: 'Walter Turncoat', cursive;
+  }
+ </style>
+
+ <a name="top"/>
+ <h1>purplehaze.ch</h1>
+ <div class="container logofun">
+  <div class="row">
+   <div class="threecol">
+     <img src="logo.jpg"/>
+   </div>
+   <div class="fivecol last">
+    <div class="fortune" >
+     dr parat salat isch rabiat!
+    </div>
+   </div>
+  </div>
+ </div>
+
+ <a name="news"/>
+ <div class="container navigation"> 
+  <div class="row">
+   <div class="threecol"></div>
+   <div class="fivecol last">
+    <a href="#top"      onclick="$.scrollTo(0);           return false;">top</a>
+    <a href="#news"     onclick="$.scrollTo('a[name=news]');     return false;">news</a>
+    <a href="#about"    onclick="$.scrollTo('a[name=about]');    return false;">about</a>
+    <a href="#projects" onclick="$.scrollTo('a[name=projects]'); return false;">projects</a>
+    <a href="#contact"  onclick="$.scrollTo('a[name=contact]');  return false;">contact</a>
+   </div>
+  </div>
+ </div>
+
+ <div class="container news hyphenate">
+  <h2>News</h2>
+ </div>
+
+ <a name="about"/>
+ <div class="container navigation"> 
+  <div class="row">
+   <div class="threecol"></div>
+   <div class="fivecol last">
+    <a href="#top"      onclick="$.scrollTo(0);           return false;">top</a>
+    <a href="#news"     onclick="$.scrollTo('a[name=news]');     return false;">news</a>
+    <a href="#about"    onclick="$.scrollTo('a[name=about]');    return false;">about</a>
+    <a href="#projects" onclick="$.scrollTo('a[name=projects]'); return false;">projects</a>
+    <a href="#contact"  onclick="$.scrollTo('a[name=contact]');  return false;">contact</a>
+   </div>
+  </div>
+ </div>
+
+ <div class="container about hyphenate">
+  <h2>About</h2>
+  <div class="row">
+   <div class="threecol">
+    purplehaze.ch is our vanity domain for webhosting, email and jabber/xmpp it also comes with an attitude.
+   </div>
+   <div class="fivecol last"><div>
+    <h3>History</h3>
+    <h4>The Golden Years</h4>
+    <p>Originally started as a school project one sunny autumn back when year numerals started with MC and dial-up internet was still the norm, purplehaze.ch has since taken us for one hell of a ride.</p>
+    <p>In the early days of its existence purplehaze.ch had its own hardware which we used for hosting websites, application servers, databases and email. During school purplehaze.ch quickly became an important tool for communicating and working with peers from the same and other classes.</p>
+    <p>Later on purplehaze.ch helped pupils throughout Switzerland get good grades by hosting the go to repository of info on the finals for computing science schools throughout the country.</p>
+    <h4>After the Finals: Finding work</h4>
+    <p>Even though we had gotten our hands on decent hardware by the end of school, purplehaze.ch did not survive the aftermath of the finals.</p>
+    <p>Working full time as newly graduated computer scientists at various companies didn't leave much time for looking after purplehaze.ch and after we had a hardware breakdown most users left. Basically the only thing that worked most of the time, was keeping the domain name registered.</p>
+    <h4>The Resurrection</h4>
+    <p>At first getting some passwords unblocked was the reason for using purplehaze.ch again. After some time we added jabber/xmpp to the mix and purplehaze.ch has become indispensable again.</p>
+    <p>Apart from email and jabber/xmpp purplehaze.ch is also hosting some simple static content as well as redirecting to archive.org for content on inexistent urls that still get requested.<p>
+
+    <p class="stars">★ ★ ★</p>
+    <p>If you would like to reconnect with us you might find us on <a href="http://chat.purplehaze.ch">our shiny multi-user chat</a> or you can hit us up on <a href="http://twitter.com/purpurhas">twitter</a>.</p>
+  </div> </div>
+  </div>
+ </div>
+
+ <a name="projects"></a>
+ <div class="container navigation"> 
+  <div class="row">
+   <div class="threecol"></div>
+   <div class="fivecol last">
+    <a href="#top"      onclick="$.scrollTo(0);           return false;">top</a>
+    <a href="#news"     onclick="$.scrollTo('a[name=news]');     return false;">news</a>
+    <a href="#about"    onclick="$.scrollTo('a[name=about]');    return false;">about</a>
+    <a href="#projects" onclick="$.scrollTo('a[name=projects]'); return false;">projects</a>
+    <a href="#contact"  onclick="$.scrollTo('a[name=contact]');  return false;">contact</a>
+  </div>
+  </div>
+ </div>
+
+ <div class="container projects hyphenate">
+  <h2>Projects</h2>
+  <div class="row">
+   <div class="threecol">
+    Our very own purplehaze.ch philosophy makes us strive to improve the accessibility of great software and services for users. It's a lifestyle and the reason our users are involved in other projects.
+   </div>
+   <div class="fivecol last">
+    <canvas id="gameCanvas"></canvas>
+   </div>
+  </div>
+ </div>
+ <div class="container rabeproject hyphenate">
+  <div class="row">
+   <div class="threecol">
+    <a href="http://rabe.ch"><img src="/img/logo_rabe_blau_weiss.jpg" style="width: 50%" alt="Radio RaBe Logo"></a>
+   </div>
+   <div class="fivecol last">
+    <div>
+     <p>Over the last couple years we have been supporting the RaBe team with our broad knowledge in networking, service engineering, provisioning and operations. We are proud that our engineering already made over 100,000 last.fm scrobbles for RaBe possible.</p>
+    </div>
+   </div>
+  </div>
+ </div>
+ <div class="container songtickerproject hyphenate">
+  <div class="row">
+   <div class="threecol">
+    <a href="http://songticker.li">songticker.li</a>
+   </div>
+   <div class="fivecol last">
+    <div>
+     <p>songticker.li is an experimental web songticker with enhanced social networking capabilities. At the moment songticker.li is in private beta and a public beta is in the works.</p>
+    </div>
+   </div>
+  </div>
+ </div>
+
+ <a name="contact"/>
+ <div class="container navigation contactnav"> 
+  <div class="row">
+   <div class="threecol"></div>
+   <div class="fivecol last">
+    <a href="#top"      onclick="$.scrollTo(0);           return false;">top</a>
+    <a href="#news"     onclick="$.scrollTo('a[name=news]');     return false;">news</a>
+    <a href="#about"    onclick="$.scrollTo('a[name=about]');    return false;">about</a>
+    <a href="#projects" onclick="$.scrollTo('a[name=projects]'); return false;">projects</a>
+    <a href="#contact"  onclick="$.scrollTo('a[name=contact]');  return false;">contact</a>
+   </div>
+  </div>
+ </div>
+
+ <div class="container socialabout hyphenate">
+  <h2>Contact</h2>
+  <div class="row">
+   <div class="threecol social">
+<div>
+    <g:plusone size="tall" href="http://purplehaze.ch"></g:plusone>
+
+    <iframe src="http://www.facebook.com/plugins/like.php?locale=en_US&amp;href=http%3A%2F%2Ffacebook.com/262214643802238&amp;send=false&amp;layout=box_count&amp;width=50&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font&amp;height=90" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:50px; height:90px; margin-top: 25px;" allowTransparency="true"></iframe>
+
+    <a href="http://twitter.com/share" class="twitter-share-button" data-count="vertical" data-url="http://purplehaze.ch" data-text="#hellyeah" >Tweet</a><script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
+</div>
+   </div>
+  
+   <div class="fivecol last blurb">
+    <p>
+     purpleTeam MM-MMXI
+    </p>
+   </div>
+  </div>
+ </div>
+
+ <!-- div id="fb-root"></div-->
+ <script type="text/javascript">
+  (function() {
+    var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+    po.src = 'https://apis.google.com/js/plusone.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+    /** more muahahahaha var e = document.createElement('script'); e.async = true;
+    e.src = document.location.protocol + '//connect.facebook.net/en_US/all.js';
+    document.getElementById('fb-root').appendChild(e);*/
+  })();
+ </script>
+ <script src="js/conway-canvas.js"></script>
+ <script>glidergun(); start_conway();</script>
+</html>
